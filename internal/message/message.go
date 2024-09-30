@@ -43,6 +43,7 @@ const (
 const (
 	msgRouteCompressMask = 0x01
 	msgTypeMask          = 0x07
+	msgErrorCodeMask     = 0x0F
 	msgRouteLengthMask   = 0xFF
 	msgHeadLength        = 0x02
 )
@@ -78,6 +79,7 @@ type Message struct {
 	Route      string // route for locating service
 	Data       []byte // payload
 	compressed bool   // is message compressed
+	Code       Type   // message code
 }
 
 // New returns a new message instance
@@ -93,6 +95,14 @@ func (m *Message) String() string {
 // Encode marshals message to binary format.
 func (m *Message) Encode() ([]byte, error) {
 	return Encode(m)
+}
+
+func (m *Message) generateFlag() byte {
+	part1 := m.Code
+	part2 := m.Type
+	byteValue := byte(part1&msgErrorCodeMask) << 4
+	byteValue |= byte(part2&msgTypeMask) << 1
+	return byteValue
 }
 
 func routable(t Type) bool {
@@ -115,6 +125,8 @@ func invalidType(t Type) bool {
 // | response |----010-|<message id>        |
 // | push     |----011-|<route>             |
 // ------------------------------------------
+// 前四位用来表示错误码系统错误码
+
 // The figure above indicates that the bit does not affect the type of message.
 // See ref: https://github.com/lonnng/nano/blob/master/docs/communication_protocol.md
 func Encode(m *Message) ([]byte, error) {
@@ -123,7 +135,8 @@ func Encode(m *Message) ([]byte, error) {
 	}
 
 	buf := make([]byte, 0)
-	flag := byte(m.Type) << 1
+	//flag := byte(m.Type) << 1
+	flag := m.generateFlag()
 
 	code, compressed := routes[m.Route]
 	if compressed {
@@ -170,7 +183,7 @@ func Decode(data []byte) (*Message, error) {
 	flag := data[0]
 	offset := 1
 	m.Type = Type((flag >> 1) & msgTypeMask)
-
+	log.Println(" routeType:", m.Type)
 	if invalidType(m.Type) {
 		return nil, ErrWrongMessageType
 	}
