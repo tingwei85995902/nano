@@ -40,6 +40,29 @@ const (
 	Push          = 0x03
 )
 
+type ErrCode byte
+
+// Message Code
+const (
+	// 基本状态码 0~200属于服务状态码，保留字段
+	CODE_OK                    ErrCode = 0 // 正常
+	CODE_NO_SUCH_METHOD                = 1 // deprecated
+	CODE_NOSQL_FAILED                  = 2 // deprecated
+	CODE_MARSHAL_FAILED                = 3
+	CODE_NO_SUCH_SERVER                = 4
+	CODE_PARAMETER_ERROR               = 5
+	CODE_NO_DATA                       = 6
+	CODE_NOT_LOGIN                     = 7
+	CODE_CONN_CLOSED                   = 8
+	CODE_SEND_FAILED                   = 9
+	CODE_NO_PENDING_DATA               = 10
+	CODE_TIMEOUT                       = 11
+	CODE_CLIENT_IS_NIL                 = 12
+	CODE_CANT_CALL_THIS_METHOD         = 13
+	CODE_DISPATCH_MSG_FAILED           = 14
+	CODE_FAILED                        = 15
+)
+
 const (
 	msgRouteCompressMask = 0x01
 	msgTypeMask          = 0x07
@@ -74,12 +97,12 @@ var (
 
 // Message represents a unmarshaled message or a message which to be marshaled
 type Message struct {
-	Type       Type   // message type
-	ID         uint64 // unique id, zero while notify mode
-	Route      string // route for locating service
-	Data       []byte // payload
-	compressed bool   // is message compressed
-	Code       Type   // message code
+	Type       Type    // message type
+	ID         uint64  // unique id, zero while notify mode
+	Route      string  // route for locating service
+	Data       []byte  // payload
+	compressed bool    // is message compressed
+	ErrCode    ErrCode // message ErrCode
 }
 
 // New returns a new message instance
@@ -98,7 +121,7 @@ func (m *Message) Encode() ([]byte, error) {
 }
 
 func (m *Message) generateFlag() byte {
-	part1 := m.Code
+	part1 := m.ErrCode
 	part2 := m.Type
 	byteValue := byte(part1&msgErrorCodeMask) << 4
 	byteValue |= byte(part2&msgTypeMask) << 1
