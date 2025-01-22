@@ -463,7 +463,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		log.Println(fmt.Sprintf("UID=%d, Message={%s}, Data=%+v", session.UID(), msg.String(), data))
 	}
 
-	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session), reflect.ValueOf(data)}
+	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session), reflect.ValueOf(data), reflect.ValueOf(lastMid)}
 	task := func() {
 		switch v := session.NetworkEntity().(type) {
 		case *agent:
@@ -490,6 +490,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	service := msg.Route[:index]
 	if s, found := h.localServices[service]; found && s.SchedName != "" {
 		sched := session.Value(s.SchedName)
+		log.Println(fmt.Sprintf("nano/handler: SchedName %s", s.SchedName))
 		if sched == nil {
 			log.Println(fmt.Sprintf("nanl/handler: cannot found `schedular.LocalScheduler` by %s", s.SchedName))
 			return
@@ -503,6 +504,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		}
 		local.Schedule(task)
 	} else {
+		log.Println("nano/handler: scheduler.PushTask")
 		scheduler.PushTask(task)
 	}
 }

@@ -57,21 +57,31 @@ func isHandlerMethod(method reflect.Method) bool {
 	}
 
 	// Method needs three ins: receiver, *Session, []byte or pointer.
-	if mt.NumIn() != 3 {
+	//四个形参，receiver，Session，[]byte or pointer,MID
+	if mt.NumIn() != 4 {
 		return false
 	}
 
+	//一个返回值
 	// Method needs one outs: error
 	if mt.NumOut() != 1 {
 		return false
 	}
 
+	//校验session参数
 	if t1 := mt.In(1); t1.Kind() != reflect.Ptr || t1 != typeOfSession {
 		return false
 	}
 
+	//校验业务参数
 	if (mt.In(2).Kind() != reflect.Ptr && mt.In(2) != typeOfBytes) || mt.Out(0) != typeOfError {
 		return false
 	}
+
+	//校验mid，如果是notify，则为0
+	if mt.In(3).Kind() != reflect.Uint64 {
+		return false
+	}
+
 	return true
 }
