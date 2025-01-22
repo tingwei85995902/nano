@@ -70,9 +70,10 @@ type (
 
 	pendingMessage struct {
 		typ     message.Type // message type
-		route   string       // message route(push)
-		mid     uint64       // response message id(response)
-		payload interface{}  // payload
+		err     message.ErrCode
+		route   string      // message route(push)
+		mid     uint64      // response message id(response)
+		payload interface{} // payload
 	}
 )
 
@@ -158,13 +159,13 @@ func (a *agent) RPC(route string, v interface{}) error {
 
 // Response, implementation for session.NetworkEntity interface
 // Response message to session
-func (a *agent) Response(v interface{}) error {
-	return a.ResponseMid(a.lastMid, v)
+func (a *agent) Response(v interface{}, err uint64) error {
+	return a.ResponseMid(a.lastMid, err, v)
 }
 
 // ResponseMid, implementation for session.NetworkEntity interface
 // Response message to session
-func (a *agent) ResponseMid(mid uint64, v interface{}) error {
+func (a *agent) ResponseMid(mid uint64, err uint64, v interface{}) error {
 	if a.status() == statusClosed {
 		return ErrBrokenPipe
 	}
@@ -187,8 +188,13 @@ func (a *agent) ResponseMid(mid uint64, v interface{}) error {
 				a.session.ID(), a.session.UID(), mid, v))
 		}
 	}
-
-	return a.send(pendingMessage{typ: message.Response, mid: mid, payload: v})
+	if err != 0 {
+		v = []byte{}
+		log.Println(fmt.Sprintf("Type=ResponseErr, ID=%d, UID=%d, MID=%d, Err=%d",
+			a.session.ID(), a.session.UID(), mid, err))
+	}
+	errCode := message.ErrCode(err)
+	return a.send(pendingMessage{typ: message.Response, mid: mid, err: errCode, payload: v})
 }
 
 // Close, implementation for session.NetworkEntity interface
@@ -283,10 +289,11 @@ func (a *agent) write() {
 
 			// construct message and encode
 			m := &message.Message{
-				Type:  data.typ,
-				Data:  payload,
-				Route: data.route,
-				ID:    data.mid,
+				Type:    data.typ,
+				Data:    payload,
+				Route:   data.route,
+				ID:      data.mid,
+				ErrCode: data.err,
 			}
 			if pipe := a.pipeline; pipe != nil {
 				err := pipe.Outbound().Process(a.session, m)

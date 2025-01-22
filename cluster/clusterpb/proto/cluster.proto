@@ -54,6 +54,7 @@ message ResponseMessage {
     int64 sessionId = 1;
     uint64 id = 2;
     bytes data = 3;
+    uint64 errCode = 4;
 }
 
 message PushMessage {

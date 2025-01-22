@@ -57,12 +57,12 @@ func (a *acceptor) LastMid() uint64 {
 }
 
 // Response implements the session.NetworkEntity interface
-func (a *acceptor) Response(v interface{}) error {
-	return a.ResponseMid(a.lastMid, v)
+func (a *acceptor) Response(v interface{}, err uint64) error {
+	return a.ResponseMid(a.lastMid, err, v)
 }
 
 // ResponseMid implements the session.NetworkEntity interface
-func (a *acceptor) ResponseMid(mid uint64, v interface{}) error {
+func (a *acceptor) ResponseMid(mid uint64, errCode uint64, v interface{}) error {
 	// TODO: buffer
 	data, err := message.Serialize(v)
 	if err != nil {
@@ -72,10 +72,15 @@ func (a *acceptor) ResponseMid(mid uint64, v interface{}) error {
 		SessionId: a.sid,
 		Id:        mid,
 		Data:      data,
+		ErrCode:   errCode,
 	}
 	_, err = a.gateClient.HandleResponse(context.Background(), request)
 	return err
 }
+
+// func (a *acceptor) ResponseErr(mid uint64, errCode uint64) error {
+// 	return nil
+// }
 
 // Close implements the session.NetworkEntity interface
 func (a *acceptor) Close() error {
