@@ -36,11 +36,11 @@ func (c *GateComponent) Test2(session *session.Session, ping *testdata.Ping) err
 }
 
 func (c *GameComponent) Test(session *session.Session, _ []byte) error {
-	return session.Push("test", &testdata.Pong{Content: "game server pong"})
+	return session.Push("test", &testdata.Pong{Content: "service server pong"})
 }
 
 func (c *GameComponent) Test2(session *session.Session, ping *testdata.Ping) error {
-	return session.Response(&testdata.Pong{Content: "game server pong2"})
+	return session.Response(&testdata.Pong{Content: "service server pong2"})
 }
 
 func TestNode(t *testing.T) {
@@ -124,7 +124,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 
 	err = connector.Notify("GameComponent.Test", &testdata.Ping{Content: "ping"})
 	c.Assert(err, IsNil)
-	c.Assert(strings.Contains(<-onResult, "game server pong"), IsTrue)
+	c.Assert(strings.Contains(<-onResult, "service server pong"), IsTrue)
 
 	err = connector.Request("GateComponent.Test2", &testdata.Ping{Content: "ping"}, func(data interface{}) {
 		onResult <- string(data.([]byte))
@@ -136,7 +136,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 		onResult <- string(data.([]byte))
 	})
 	c.Assert(err, IsNil)
-	c.Assert(strings.Contains(<-onResult, "game server pong2"), IsTrue)
+	c.Assert(strings.Contains(<-onResult, "service server pong2"), IsTrue)
 
 	err = connector.Notify("MasterComponent.Test", &testdata.Ping{Content: "ping"})
 	c.Assert(err, IsNil)
