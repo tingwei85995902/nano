@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/lonng/nano/pkg/errcode"
 	"math/rand"
 	"net"
 	"reflect"
@@ -334,6 +335,9 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 	service := msg.Route[:index]
 	members := h.findMembers(service)
 	if len(members) == 0 {
+		if msg.Type == message.Request {
+			session.ResponseMID(msg.ID, nil, errcode.CodeMethodNotFound)
+		}
 		log.Println(fmt.Sprintf("nano/handler: %s not found(forgot registered?)", msg.Route))
 		return
 	}

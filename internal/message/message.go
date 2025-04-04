@@ -42,27 +42,6 @@ const (
 
 type ErrCode byte
 
-// Message Code
-const (
-	// 基本状态码 0~200属于服务状态码，保留字段
-	CODE_OK             ErrCode = iota // 正常
-	CODE_NO_SUCH_METHOD                // deprecated
-	CODE_NOSQL_FAILED                  // deprecated
-	CODE_MARSHAL_FAILED
-	CODE_NO_SUCH_SERVER
-	CODE_PARAMETER_ERROR
-	CODE_NO_DATA
-	CODE_NOT_LOGIN
-	CODE_CONN_CLOSED
-	CODE_SEND_FAILED
-	CODE_NO_PENDING_DATA
-	CODE_TIMEOUT
-	CODE_CLIENT_IS_NIL
-	CODE_CANT_CALL_THIS_METHOD
-	CODE_DISPATCH_MSG_FAILED
-	CODE_FAILED
-)
-
 const (
 	msgRouteCompressMask = 0x01
 	msgTypeMask          = 0x07
